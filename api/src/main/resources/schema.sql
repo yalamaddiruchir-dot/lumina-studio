@@ -214,3 +214,68 @@ CREATE TABLE IF NOT EXISTS payments (
   KEY idx_payments_invoice (invoice_id),
   CONSTRAINT fk_pay_invoice FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Equipment inventory (owner-managed) with rent per event
+CREATE TABLE IF NOT EXISTS inventory (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  name           VARCHAR(160) NOT NULL,
+  category       VARCHAR(40)  NOT NULL DEFAULT 'camera',
+  brand          VARCHAR(120),
+  quantity       INT          NOT NULL DEFAULT 1,
+  rent_per_event DOUBLE       NOT NULL DEFAULT 0,
+  notes          TEXT,
+  created_by     INT,
+  created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_inventory_category (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Cost estimations / quotations (owner + manager)
+CREATE TABLE IF NOT EXISTS estimates (
+  id             INT AUTO_INCREMENT PRIMARY KEY,
+  estimate_no    VARCHAR(30) NOT NULL UNIQUE,
+  client_id      INT,
+  event_name     VARCHAR(200) NOT NULL,
+  event_type     VARCHAR(60),
+  event_date     VARCHAR(10),
+  days           INT          NOT NULL DEFAULT 1,
+  cameras        INT          NOT NULL DEFAULT 0,
+  camera_rate    DOUBLE       NOT NULL DEFAULT 0,
+  employee_rate  DOUBLE       NOT NULL DEFAULT 0,
+  extras_label   VARCHAR(160),
+  extras_cost    DOUBLE       NOT NULL DEFAULT 0,
+  equipment_cost DOUBLE       NOT NULL DEFAULT 0,
+  subtotal       DOUBLE       NOT NULL DEFAULT 0,
+  gst_rate       DOUBLE       NOT NULL DEFAULT 18,
+  gst_amount     DOUBLE       NOT NULL DEFAULT 0,
+  total          DOUBLE       NOT NULL DEFAULT 0,
+  status         VARCHAR(20)  NOT NULL DEFAULT 'draft',
+  notes          TEXT,
+  company_name   VARCHAR(160),
+  company_license VARCHAR(80),
+  created_by     INT,
+  created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_estimates_client (client_id),
+  KEY idx_estimates_status (status),
+  CONSTRAINT fk_est_client FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Team members selected for an estimate
+CREATE TABLE IF NOT EXISTS estimate_employees (
+  estimate_id INT NOT NULL,
+  user_id     INT NOT NULL,
+  PRIMARY KEY (estimate_id, user_id),
+  CONSTRAINT fk_ee_estimate FOREIGN KEY (estimate_id) REFERENCES estimates(id) ON DELETE CASCADE,
+  CONSTRAINT fk_ee_user     FOREIGN KEY (user_id)     REFERENCES users(id)     ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Equipment items added to an estimate (snapshot of name + rent)
+CREATE TABLE IF NOT EXISTS estimate_equipment (
+  estimate_id  INT NOT NULL,
+  inventory_id INT NOT NULL,
+  name         VARCHAR(160),
+  qty          INT    NOT NULL DEFAULT 1,
+  rent         DOUBLE NOT NULL DEFAULT 0,
+  PRIMARY KEY (estimate_id, inventory_id),
+  CONSTRAINT fk_eq_estimate  FOREIGN KEY (estimate_id)  REFERENCES estimates(id)   ON DELETE CASCADE,
+  CONSTRAINT fk_eq_inventory FOREIGN KEY (inventory_id) REFERENCES inventory(id)   ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

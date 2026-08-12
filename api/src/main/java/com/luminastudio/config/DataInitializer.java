@@ -307,6 +307,98 @@ public class DataInitializer implements CommandLineRunner {
                     .addValue("status", ph[5]).addValue("uploader", ph[6]));
         }
 
+        // ---------------- INVENTORY (cameras, hard disks, stands) ----------------
+        // name, category, brand, quantity, rent_per_event, notes
+        Object[][] inventory = {
+            {"Sony A7 IV Mirrorless Camera", "camera", "Sony", 4, 1500, "Full-frame, with 2 batteries + charger."},
+            {"Canon EOS R6 Mark II", "camera", "Canon", 3, 1500, "Backup body, dual card slots."},
+            {"Nikon Z6 II", "camera", "Nikon", 2, 1400, "Second-shooter kit."},
+            {"GoPro Hero 12", "camera", "GoPro", 2, 500, "Behind-the-scenes / action shots."},
+            {"2TB Portable SSD", "hard_disk", "Samsung", 5, 300, "Card backup + working drive."},
+            {"4TB External HDD", "hard_disk", "Seagate", 3, 400, "Archive copy for RAW files."},
+            {"Manfrotto Tripod", "stand", "Manfrotto", 4, 200, "Aluminium, 74\" max height."},
+            {"Light Stand", "stand", "Godox", 6, 150, "With umbrella adapter."},
+            {"Gimbal Stabilizer", "equipment", "DJI", 2, 600, "Ronin RS3 for video."},
+            {"LED Light Kit", "equipment", "Godox", 2, 800, "SL60W x2 with softboxes."},
+            {"Drone DJI Air 3", "equipment", "DJI", 1, 2500, "Aerial coverage — permits required."},
+            {"Memory Cards (128GB x2 set)", "hard_disk", "SanDisk", 8, 100, "Per camera kit."},
+        };
+        for (Object[] iv : inventory) {
+            jdbc.update("""
+                INSERT INTO inventory (name, category, brand, quantity, rent_per_event, notes, created_by)
+                VALUES (:name, :category, :brand, :qty, :rent, :notes, (SELECT id FROM users WHERE name = 'Arjun Mehta'))
+                """, new MapSqlParameterSource()
+                    .addValue("name", iv[0]).addValue("category", iv[1]).addValue("brand", iv[2])
+                    .addValue("qty", iv[3]).addValue("rent", iv[4]).addValue("notes", iv[5]));
+        }
+
+        // ---------------- ESTIMATES (sample quotations) ----------------
+        // event, client, type, eventDateOffset(+ = daysAgo, - = daysAhead), days, cameras, cameraRate, employeeRate, extrasLabel, extrasCost, status, notes, team[], equipment[(inventoryName, qty)]
+        Object[][] estimates = {
+            {"Aarav & Nisha Wedding — Full Coverage", "Desai Wedding", "Wedding", -25, 3, 4, 1500, 2500,
+             "Drone aerial shots", 2500, "sent",
+             "4 cameras + 6 crew for 3 days. 50% advance confirms the booking.",
+             new String[]{"Sanjay Verma", "Rohit Menon", "Priya Patel", "Sneha Kulkarni", "Farhan Ali", "Divya Krishnan"},
+             new Object[][]{{"Sony A7 IV Mirrorless Camera", 2}, {"Canon EOS R6 Mark II", 1}, {"GoPro Hero 12", 1},
+                            {"2TB Portable SSD", 2}, {"Drone DJI Air 3", 1}, {"Manfrotto Tripod", 2}}},
+            {"Gupta Wedding — Photography Package", "Gupta Family", "Wedding", -40, 2, 3, 1500, 2500,
+             "Extra retouching", 1500, "draft",
+             "3 cameras + 5 crew for 2 days. Includes 40-page premium album.",
+             new String[]{"Sanjay Verma", "Rohit Menon", "Priya Patel", "Sneha Kulkarni", "Kabir Khan"},
+             new Object[][]{{"Sony A7 IV Mirrorless Camera", 2}, {"Canon EOS R6 Mark II", 1},
+                            {"2TB Portable SSD", 2}, {"4TB External HDD", 1}, {"Light Stand", 2}}},
+        };
+        for (Object[] es : estimates) {
+            int dateOffset = (Integer) es[3];
+            int days = (Integer) es[4];
+            int cameras = (Integer) es[5];
+            double cameraRate = (Integer) es[6];
+            double employeeRate = (Integer) es[7];
+            double extrasCost = (Integer) es[9];
+            String[] team = (String[]) es[12];
+            Object[][] equip = (Object[][]) es[13];
+            double employeeCost = team.length * employeeRate * days;
+            double equipmentCost = 0;
+            for (Object[] item : equip) {
+                equipmentCost += ((Integer) item[1]) * (double) (jdbc.queryForObject(
+                        "SELECT rent_per_event FROM inventory WHERE name = :n", Map.of("n", item[0]), Double.class)) * days;
+            }
+            double cameraCost = cameras * cameraRate * days;
+            double subtotal = Math.round((cameraCost + employeeCost + equipmentCost + extrasCost) * 100.0) / 100.0;
+            double gst = Math.round(subtotal * 18 / 100.0 * 100.0) / 100.0;
+            double total = Math.round((subtotal + gst) * 100.0) / 100.0;
+            String year = String.valueOf(java.time.LocalDate.now().getYear());
+            String no = "EST-" + year + "-" + String.format("%04d", 100 + rnd.nextInt(900));
+            jdbc.update("""
+                INSERT INTO estimates (estimate_no, client_id, event_name, event_type, event_date, days,
+                                       cameras, camera_rate, employee_rate, extras_label, extras_cost,
+                                       equipment_cost, subtotal, gst_rate, gst_amount, total, status,
+                                       notes, company_name, company_license, created_by)
+                VALUES (:no, (SELECT id FROM clients WHERE name = :client), :event, :type, :date, :days,
+                        :cameras, :cameraRate, :employeeRate, :extrasLabel, :extrasCost,
+                        :equipmentCost, :subtotal, 18, :gst, :total, :status,
+                        :notes, 'Lumina Studios', 'LUM/STD/2026/001', (SELECT id FROM users WHERE name = 'Rahul Sharma'))
+                """, new MapSqlParameterSource()
+                    .addValue("no", no).addValue("client", es[1]).addValue("event", es[0]).addValue("type", es[2])
+                    .addValue("date", dateOffset > 0 ? daysAgo(dateOffset) : daysAhead(-dateOffset))
+                    .addValue("days", days).addValue("cameras", cameras).addValue("cameraRate", cameraRate)
+                    .addValue("employeeRate", employeeRate).addValue("extrasLabel", es[8])
+                    .addValue("extrasCost", extrasCost).addValue("equipmentCost", equipmentCost)
+                    .addValue("subtotal", subtotal).addValue("gst", gst).addValue("total", total)
+                    .addValue("status", es[10]).addValue("notes", es[11] == null ? null : es[11]));
+            int eid = jdbc.queryForObject("SELECT id FROM estimates WHERE estimate_no = :no", Map.of("no", no), Integer.class);
+            for (String member : team) {
+                jdbc.update("INSERT INTO estimate_employees (estimate_id, user_id) VALUES (:eid, (SELECT id FROM users WHERE name = :n))",
+                        Map.of("eid", eid, "n", member));
+            }
+            for (Object[] item : equip) {
+                jdbc.update("""
+                    INSERT INTO estimate_equipment (estimate_id, inventory_id, name, qty, rent)
+                    VALUES (:eid, (SELECT id FROM inventory WHERE name = :n), :n, :qty, (SELECT rent_per_event FROM inventory WHERE name = :n))
+                    """, new MapSqlParameterSource().addValue("eid", eid).addValue("n", item[0]).addValue("qty", item[1]));
+            }
+        }
+
         // ---------------- TIMESHEETS ----------------
         String[] tsStaff = {"Priya Patel", "Sneha Kulkarni", "Kabir Khan", "Farhan Ali", "Divya Krishnan",
                 "Meera Nambiar", "Aditi Rao", "Aryan Kapoor", "Rohit Menon", "Arnav Singh", "Zoya Khan"};

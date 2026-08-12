@@ -191,6 +191,13 @@ function EmployeeModal({ mode, employee, busy, canSalary, onClose, onSave }) {
             <option value="inactive">Inactive</option>
           </select>
         </div>
+        {mode === 'create' && (
+          <div className="field span-2">
+            <label>Login password</label>
+            <input type="text" value={f.password || ''} onChange={set('password')} placeholder="Temporary login password (default: demo123)" />
+            <span className="hint">Share this with the employee — they can change it from their profile.</span>
+          </div>
+        )}
         {canSalary && (
           <>
             <div className="field"><label>Monthly salary (₹)</label><input type="number" value={f.salary} onChange={set('salary')} /></div>

@@ -15,6 +15,8 @@ import Attendance from './pages/Attendance';
 import Payroll from './pages/Payroll';
 import Invoices from './pages/Invoices';
 import Calendar from './pages/Calendar';
+import Estimations from './pages/Estimations';
+import Inventory from './pages/Inventory';
 import AccessControl from './pages/AccessControl';
 import ActivityLog from './pages/ActivityLog';
 import Profile from './pages/Profile';
@@ -87,6 +89,8 @@ export default function App() {
         <Route path="/payroll" element={<RequirePerm perm="payroll.view"><Payroll /></RequirePerm>} />
         <Route path="/invoices" element={<RequirePerm perm="invoices.view"><Invoices /></RequirePerm>} />
         <Route path="/calendar" element={<RequirePerm perm="projects.view"><Calendar /></RequirePerm>} />
+        <Route path="/estimations" element={<RequirePerm perm="estimates.view"><Estimations /></RequirePerm>} />
+        <Route path="/inventory" element={<RequirePerm perm="inventory.view"><Inventory /></RequirePerm>} />
         <Route path="/access" element={<RequirePerm perm="access.view"><AccessControl /></RequirePerm>} />
         <Route path="/activity" element={<RequirePerm perm="activity.view"><ActivityLog /></RequirePerm>} />
         <Route path="/profile" element={<Profile />} />

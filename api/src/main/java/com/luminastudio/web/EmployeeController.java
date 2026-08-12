@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +59,40 @@ public class EmployeeController {
     public Map<String, Object> roles(HttpServletRequest req) {
         Auth.require(req, "access.view");
         return Permissions.meta();
+    }
+
+    /**
+     * GET /api/employees/available?date=YYYY-MM-DD — team members who are free for a
+     * shoot on the given date (not already booked on an order shooting that day,
+     * not on leave). Used by the estimation feature (Owner / Manager).
+     */
+    @GetMapping("/available")
+    public Map<String, Object> available(@RequestParam String date, HttpServletRequest req) {
+        Auth.require(req, "estimates.manage");
+        Map<String, Object> params = Map.of("date", date);
+        List<Map<String, Object>> available = jdbc.queryForList("""
+            SELECT u.id, u.name, u.role, u.department, u.position, u.avatar_hue, u.status
+            FROM users u
+            WHERE u.status = 'active'
+              AND u.id NOT IN (SELECT DISTINCT t.assignee_id FROM tasks t
+                               JOIN projects p ON p.id = t.project_id
+                               WHERE p.shoot_date = :date AND t.assignee_id IS NOT NULL)
+              AND u.id NOT IN (SELECT user_id FROM attendance WHERE date = :date AND status = 'leave')
+            ORDER BY u.name
+            """, params);
+        List<Map<String, Object>> busy = jdbc.queryForList("""
+            SELECT DISTINCT u.id, u.name, u.role, u.department, u.position, u.avatar_hue
+            FROM tasks t
+            JOIN projects p ON p.id = t.project_id
+            JOIN users u ON u.id = t.assignee_id
+            WHERE p.shoot_date = :date AND t.assignee_id IS NOT NULL
+            ORDER BY u.name
+            """, params);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("date", date);
+        out.put("available", available);
+        out.put("busy", busy);
+        return out;
     }
 
     @GetMapping
@@ -102,7 +138,8 @@ public class EmployeeController {
         List<Map<String, Object>> dup = jdbc.queryForList("SELECT id FROM users WHERE email = :email", Map.of("email", email));
         if (!dup.isEmpty()) throw new ApiException(400, "An account with this email already exists");
 
-        String password = body.get("password") == null ? "demo123" : String.valueOf(body.get("password"));
+        String password = body.get("password") == null || String.valueOf(body.get("password")).isBlank()
+                ? "demo123" : String.valueOf(body.get("password"));
         MapSqlParameterSource p = new MapSqlParameterSource()
                 .addValue("name", name)
                 .addValue("email", email)
@@ -120,9 +157,9 @@ public class EmployeeController {
                 .addValue("hue", ThreadLocalRandom.current().nextInt(360));
         jdbc.update("""
             INSERT INTO users (name, email, password_hash, role, department, position, phone, location,
-                               bio, skills, salary, hire_date, status, avatar_hue)
+                               bio, skills, salary, hire_date, status, avatar_hue, is_demo)
             VALUES (:name, :email, :hash, :role, :department, :position, :phone, :location,
-                    :bio, :skills, :salary, :hire_date, :status, :hue)
+                    :bio, :skills, :salary, :hire_date, :status, :hue, 0)
             """, p);
         Map<String, Object> row = jdbc.queryForMap("SELECT * FROM users WHERE email = :email", Map.of("email", email));
         activity.log((Integer) me.get("id"), "added", "employee", row.get("id"),

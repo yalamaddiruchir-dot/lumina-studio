@@ -74,42 +74,12 @@ public class AuthController {
     }
 
     /**
-     * POST /api/auth/signup — create a real account (no demo data).
-     * New accounts start in an isolated workspace with role "production";
-     * they only see data they create themselves. Mock/demo data is visible
-     * only to the pre-seeded demo accounts.
+     * Signup is disabled — accounts are created by the studio (Owner / Manager / HR)
+     * from the Employees page. Returning 403 keeps the public endpoint from being used.
      */
     @PostMapping("/signup")
-    public Map<String, Object> signup(@RequestBody(required = false) Map<String, String> body) {
-        String name = body == null ? null : str(body.get("name"));
-        String email = body == null ? null : str(body.get("email")).trim().toLowerCase();
-        String password = body == null ? null : body.get("password");
-        if (name == null || name.isBlank()) throw new ApiException(400, "Name is required");
-        if (email == null || !email.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
-            throw new ApiException(400, "Enter a valid email address");
-        }
-        if (password == null || password.length() < 6) {
-            throw new ApiException(400, "Password must be at least 6 characters");
-        }
-        List<Map<String, Object>> dup = jdbc.queryForList("SELECT id FROM users WHERE email = :email", Map.of("email", email));
-        if (!dup.isEmpty()) throw new ApiException(400, "An account with this email already exists");
-
-        jdbc.update("""
-            INSERT INTO users (name, email, password_hash, role, department, position, status, avatar_hue, is_demo)
-            VALUES (:name, :email, :hash, 'manager', NULL, NULL, 'active', :hue, 0)
-            """, new MapSqlParameterSource()
-                .addValue("name", name.trim())
-                .addValue("email", email)
-                .addValue("hash", passwordEncoder.encode(password))
-                .addValue("hue", ThreadLocalRandom.current().nextInt(360)));
-        Map<String, Object> row = jdbc.queryForMap("SELECT * FROM users WHERE email = :email", Map.of("email", email));
-        String token = jwtService.generate(((Number) row.get("id")).intValue(), (String) row.get("role"), email);
-        activity.log(((Number) row.get("id")).intValue(), "created", "account", row.get("id"),
-                name.trim() + " created an account");
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("token", token);
-        out.put("user", Auth.serializeUser(row, (String) row.get("role")));
-        return out;
+    public Map<String, Object> signup() {
+        throw new ApiException(403, "Account creation is managed by the studio — ask your Owner, Manager or HR to create your login.");
     }
 
     @GetMapping("/me")

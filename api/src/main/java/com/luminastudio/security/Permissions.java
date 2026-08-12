@@ -70,6 +70,10 @@ public final class Permissions {
         CAP_LABELS.put("attendance.checkin", "Check in / out");
         CAP_LABELS.put("payroll.view", "View payroll");
         CAP_LABELS.put("invoices.view", "View invoices & payments");
+        CAP_LABELS.put("estimates.view", "View estimations");
+        CAP_LABELS.put("estimates.manage", "Create / manage estimations");
+        CAP_LABELS.put("inventory.view", "View inventory");
+        CAP_LABELS.put("inventory.manage", "Manage inventory");
         CAP_LABELS.put("invoices.manage", "Create / manage invoices & record payments");
         CAP_LABELS.put("payroll.manage", "Process / mark payroll paid");
         CAP_LABELS.put("activity.view", "View activity log");
@@ -86,7 +90,7 @@ public final class Permissions {
         MATRIX.put("owner", CAPABILITIES);
 
         MATRIX.put("admin", caps(
-                "dashboard.view", "employees.view", "employees.manage", "employees.delete",
+                "dashboard.view", "employees.view",
                 "salary.view", "clients.view", "clients.manage", "projects.view",
                 "projects.manage", "projects.delete", "pipeline.advance", "tasks.view_all",
                 "tasks.manage", "assets.view", "assets.upload", "assets.delete",
@@ -95,8 +99,10 @@ public final class Permissions {
                 "invoices.view", "invoices.manage", "activity.view", "access.view"));
 
         MATRIX.put("manager", caps(
-                "dashboard.view", "employees.view", "clients.view", "clients.manage",
-                "projects.view", "projects.manage", "projects.delete", "pipeline.advance",
+                "dashboard.view", "employees.view", "employees.manage", "employees.delete",
+                "clients.view", "clients.manage", "projects.view", "projects.manage",
+                "projects.delete", "pipeline.advance", "estimates.view", "estimates.manage",
+                "inventory.view",
                 "tasks.view_all", "tasks.manage", "assets.view", "assets.upload",
                 "assets.delete", "timesheets.view_all", "timesheets.submit",
                 "timesheets.approve", "attendance.checkin", "invoices.view", "activity.view"));

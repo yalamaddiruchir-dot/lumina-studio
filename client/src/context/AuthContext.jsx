@@ -25,13 +25,6 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
-  const signup = useCallback(async (name, email, password) => {
-    const data = await api.post('/auth/signup', { name, email, password });
-    setToken(data.token);
-    setUser(data.user);
-    return data.user;
-  }, []);
-
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
@@ -51,8 +44,8 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   const value = useMemo(
-    () => ({ user, loading, login, signup, logout, updateUser, can }),
-    [user, loading, login, signup, logout, updateUser, can]
+    () => ({ user, loading, login, logout, updateUser, can }),
+    [user, loading, login, logout, updateUser, can]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -62,8 +55,8 @@ export const useAuth = () => useContext(AuthContext);
 
 // Mirrors the server permission matrix (single source of truth: api/…/Permissions.java)
 const PERM_TABLE = {
-  admin: ['dashboard.view', 'employees.view', 'employees.manage', 'employees.delete', 'salary.view', 'clients.view', 'clients.manage', 'projects.view', 'projects.manage', 'projects.delete', 'pipeline.advance', 'tasks.view_all', 'tasks.manage', 'assets.view', 'assets.upload', 'assets.delete', 'timesheets.view_all', 'timesheets.submit', 'timesheets.approve', 'attendance.view_all', 'attendance.checkin', 'payroll.view', 'invoices.view', 'invoices.manage', 'activity.view', 'access.view'],
-  manager: ['dashboard.view', 'employees.view', 'clients.view', 'clients.manage', 'projects.view', 'projects.manage', 'projects.delete', 'pipeline.advance', 'tasks.view_all', 'tasks.manage', 'assets.view', 'assets.upload', 'assets.delete', 'timesheets.view_all', 'timesheets.submit', 'timesheets.approve', 'attendance.checkin', 'invoices.view', 'activity.view'],
+  admin: ['dashboard.view', 'employees.view', 'salary.view', 'clients.view', 'clients.manage', 'projects.view', 'projects.manage', 'projects.delete', 'pipeline.advance', 'tasks.view_all', 'tasks.manage', 'assets.view', 'assets.upload', 'assets.delete', 'timesheets.view_all', 'timesheets.submit', 'timesheets.approve', 'attendance.view_all', 'attendance.checkin', 'payroll.view', 'invoices.view', 'invoices.manage', 'activity.view', 'access.view'],
+  manager: ['dashboard.view', 'employees.view', 'employees.manage', 'employees.delete', 'clients.view', 'clients.manage', 'projects.view', 'projects.manage', 'projects.delete', 'pipeline.advance', 'estimates.view', 'estimates.manage', 'inventory.view', 'tasks.view_all', 'tasks.manage', 'assets.view', 'assets.upload', 'assets.delete', 'timesheets.view_all', 'timesheets.submit', 'timesheets.approve', 'attendance.checkin', 'invoices.view', 'activity.view'],
   hr: ['dashboard.view', 'employees.view', 'employees.manage', 'employees.delete', 'salary.view', 'clients.view', 'projects.view', 'tasks.view_all', 'assets.view', 'timesheets.view_all', 'timesheets.submit', 'attendance.view_all', 'attendance.checkin', 'activity.view'],
   finance: ['dashboard.view', 'employees.view', 'salary.view', 'clients.view', 'projects.view', 'tasks.view_all', 'assets.view', 'timesheets.view_all', 'timesheets.submit', 'timesheets.approve', 'attendance.view_all', 'payroll.view', 'payroll.manage', 'invoices.view', 'invoices.manage', 'activity.view'],
   sales: ['dashboard.view', 'clients.view', 'clients.manage', 'projects.view', 'projects.manage', 'tasks.own', 'assets.view', 'timesheets.submit', 'attendance.checkin', 'invoices.view'],

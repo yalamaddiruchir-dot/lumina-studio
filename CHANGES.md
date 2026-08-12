@@ -366,3 +366,53 @@ returns to the login page.
 - `/`, `/dashboard`, `/projects/2` serve the SPA; JS/CSS assets 200
 - Full app works through the container: login, dashboard, gallery, invoices, calendar —
   zero console errors, all checks pass.
+
+---
+
+# 📦 v2.6 — Restricted employee creation, no signup, estimations + PDF, inventory
+
+**Date:** 13 Aug 2026
+**Requested:** (1) only Owner/Manager/HR can create employee logins; (2) remove signup from the
+login page; (3) Owner/Manager can estimate event cost (cameras, employees, equipment) with
+employee availability + a printable PDF quotation; (4) Owner can manage equipment inventory
+(cameras, hard disks, stands) with rent per event; (5) push to GitHub.
+
+## 1. Employee creation — Owner / Manager / HR only
+- **Admin (System Administrator) no longer has `employees.manage` / `employees.delete`** —
+  the Add/Edit/Remove controls disappear for admin; only Owner, Manager and HR create logins.
+- **Manager gained `employees.manage` / `employees.delete`** (previously view-only).
+- Employee creation now sets `is_demo=0` (a real, isolated workspace — no mock data) and
+  accepts an optional **login password** field in the modal (default `demo123`).
+
+## 2. Signup removed
+- Login page has **no "Create account" tab** — single sign-in form + demo chips.
+- `POST /api/auth/signup` disabled server-side (removed from permit-all, returns 401/403).
+  All accounts are created by the studio.
+
+## 3. Event cost estimation (Owner + Manager) with PDF
+- New `estimates` + `estimate_employees` + `estimate_equipment` tables; endpoints:
+  - `GET/POST /api/estimates`, `GET /api/estimates/{id}`, `PATCH /{id}` (status), `DELETE`
+  - `GET /api/estimates/{id}/pdf` — **OpenPDF-generated quotation**: company name,
+    studio license, estimate no, client, event, itemised breakdown (cameras × rate × days,
+    team × rate × days, equipment, extras), GST 18%, total, team list, notes/terms.
+  - `GET /api/employees/available?date=` — who's free on the event date (excludes members
+    already booked on an order shooting that day or on leave); the form also lists the busy ones.
+- Cost model: cameras × camera_rate × days + team × employee_rate × days + equipment
+  (inventory rent × qty × days) + extras, then GST.
+- UI: **Estimations** page — list, create modal with live availability chips, equipment
+  picker from inventory, live cost summary, status flow, PDF download, detail view.
+
+## 4. Equipment inventory (Owner)
+- New `inventory` table + CRUD: cameras, hard disks, stands, equipment with quantity and
+  **rent per event**.
+- Owner manages (`inventory.manage`); Manager views (`inventory.view`) so they can add
+  equipment into estimations.
+- UI: **Equipment** page (list, filters by category, add/edit/delete, rent shown ₹/event).
+- Seeded 12 realistic items (Sony/Canon cameras, SSDs/HDDs, tripods, gimbals, LED kits, drone).
+
+## Verified
+- API: admin→403 create employee, manager/hr→201; signup blocked; inventory owner-only writes;
+  availability correctly shows booked members; estimate costing (14800 + 18% = 17464) correct;
+  PDF contains company/license/breakdown/GST/total.
+- Browser: 14 checks — no signup tab, admin lacks Add-employee & Equipment nav, manager has
+  Add-employee, estimations list + modal with availability + live total, inventory page — zero errors.

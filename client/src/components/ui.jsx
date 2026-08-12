@@ -27,9 +27,11 @@ export const STATUS_META = {
   uploaded: { label: 'Uploaded', cls: 'badge--gray' },
   selected: { label: 'Client selected', cls: 'badge--blue' },
   approved: { label: 'Approved', cls: 'badge--green' },
-  // Invoice statuses
+  // Invoice + estimate statuses
   draft: { label: 'Draft', cls: 'badge--gray' },
   sent: { label: 'Sent', cls: 'badge--blue' },
+  accepted: { label: 'Accepted', cls: 'badge--green' },
+  rejected: { label: 'Rejected', cls: 'badge--red' },
   partial: { label: 'Partially paid', cls: 'badge--amber' },
   paid: { label: 'Paid', cls: 'badge--green' },
   overdue: { label: 'Overdue', cls: 'badge--red' },

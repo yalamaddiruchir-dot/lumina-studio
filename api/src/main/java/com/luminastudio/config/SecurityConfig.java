@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/health").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/health").permitAll()
                         // Built frontend (served by this process): static assets + SPA shell are public.
                         .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico",
                                 "/logo.svg", "/*.png", "/*.webmanifest", "/*.txt").permitAll()

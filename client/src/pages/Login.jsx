@@ -40,10 +40,9 @@ const DEMO_ACCOUNTS = [
 ];
 
 export default function Login() {
-  const { login, signup } = useAuth();
+  const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,12 +54,8 @@ export default function Login() {
     setBusy(true);
     setError('');
     try {
-      const user = mode === 'signin'
-        ? await login(email, password)
-        : await signup(name, email, password);
-      toast(mode === 'signin'
-        ? `Welcome back, ${user.name.split(' ')[0]}!`
-        : `Welcome, ${user.name.split(' ')[0]}! Your workspace is ready.`);
+      const user = await login(email, password);
+      toast(`Welcome back, ${user.name.split(' ')[0]}!`);
       navigate('/dashboard');
     } catch (err) {
       setError(err.message);
@@ -85,8 +80,6 @@ export default function Login() {
       setBusy(false);
     }
   };
-
-  const switchMode = (m) => { setMode(m); setError(''); };
 
   return (
     <div className="login">
@@ -116,28 +109,12 @@ export default function Login() {
 
       <div className="login__panel">
         <div className="login__card">
-          <div className="segmented" style={{ width: '100%', marginBottom: 18 }}>
-            <button className={mode === 'signin' ? 'active' : ''} onClick={() => switchMode('signin')} style={{ flex: 1 }}>Sign in</button>
-            <button className={mode === 'signup' ? 'active' : ''} onClick={() => switchMode('signup')} style={{ flex: 1 }}>Create account</button>
-          </div>
-
-          <h2>{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h2>
-          <p>
-            {mode === 'signin'
-              ? 'Sign in to your studio workspace.'
-              : 'Start a real workspace — no demo data, just yours.'}
-          </p>
+          <h2>Welcome back</h2>
+          <p>Sign in to your studio workspace.</p>
 
           {error && <div className="login__error">{error}</div>}
 
           <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {mode === 'signup' && (
-              <div className="field">
-                <label htmlFor="name">Full name</label>
-                <input id="name" type="text" placeholder="e.g. Rohan Gupta" value={name}
-                  onChange={(e) => setName(e.target.value)} autoComplete="name" required />
-              </div>
-            )}
             <div className="field">
               <label htmlFor="email">Work email</label>
               <input id="email" type="email" placeholder="you@company.com" value={email}
@@ -145,38 +122,29 @@ export default function Login() {
             </div>
             <div className="field">
               <label htmlFor="password">Password</label>
-              <input id="password" type="password" placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'} value={password}
-                onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required />
+              <input id="password" type="password" placeholder="••••••••" value={password}
+                onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
             </div>
             <button className="btn btn--primary btn--block" type="submit" disabled={busy} style={{ marginTop: 4 }}>
-              {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+              {busy ? 'Signing in…' : 'Sign in'}
               {!busy && <Icon name="arrowRight" size={16} />}
             </button>
           </form>
 
-          {mode === 'signup' && (
-            <p className="hint" style={{ marginTop: 12, fontSize: 11.5, color: 'var(--text-3)', textAlign: 'center' }}>
-              New accounts get an empty workspace — add your own clients, orders and team.
-              Demo/sample data is only visible to the pre-loaded demo accounts.
-            </p>
-          )}
-
-          {mode === 'signin' && (
-            <div className="demo-box">
-              <span>Demo accounts — every position (password: demo123)</span>
-              <div className="demo-accounts">
-                {DEMO_ACCOUNTS.map((a) => (
-                  <button key={a.email} className="demo-account" onClick={() => quickLogin(a)} disabled={busy}>
-                    <Avatar name={a.label} hue={a.hue} size="sm" />
-                    {a.label}
-                  </button>
-                ))}
-              </div>
-              <p className="hint" style={{ marginTop: 10, fontSize: 11.5, color: 'var(--text-3)' }}>
-                All demo accounts share the password <span className="kbd">demo123</span>
-              </p>
+          <div className="demo-box">
+            <span>Demo accounts — every position (password: demo123)</span>
+            <div className="demo-accounts">
+              {DEMO_ACCOUNTS.map((a) => (
+                <button key={a.email} className="demo-account" onClick={() => quickLogin(a)} disabled={busy}>
+                  <Avatar name={a.label} hue={a.hue} size="sm" />
+                  {a.label}
+                </button>
+              ))}
             </div>
-          )}
+            <p className="hint" style={{ marginTop: 10, fontSize: 11.5, color: 'var(--text-3)' }}>
+              All demo accounts share the password <span className="kbd">demo123</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

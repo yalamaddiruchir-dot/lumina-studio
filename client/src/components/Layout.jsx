@@ -14,6 +14,7 @@ const NAV = [
     { to: '/tasks', label: 'Tasks', icon: 'kanban', perm: ['tasks.view_all', 'tasks.own'] },
     { to: '/assets', label: 'Media Assets', icon: 'film', perm: 'assets.view' },
     { to: '/calendar', label: 'Calendar', icon: 'calendar', perm: 'projects.view' },
+    { to: '/estimations', label: 'Estimations', icon: 'file', perm: 'estimates.view' },
   ]},
   { section: 'People', items: [
     { to: '/employees', label: 'Employees', icon: 'users', perm: 'employees.view' },
@@ -24,6 +25,9 @@ const NAV = [
     { to: '/clients', label: 'Clients', icon: 'building', perm: 'clients.view' },
     { to: '/payroll', label: 'Payroll', icon: 'wallet', perm: 'payroll.view' },
     { to: '/invoices', label: 'Invoices', icon: 'banknote', perm: 'invoices.view' },
+  ]},
+  { section: 'Studio Assets', items: [
+    { to: '/inventory', label: 'Equipment', icon: 'cube', perm: 'inventory.view' },
   ]},
   { section: 'Administration', items: [
     { to: '/access', label: 'Access Control', icon: 'shield', perm: 'access.view' },
@@ -43,6 +47,8 @@ const TITLES = {
   '/payroll': ['Payroll', 'Monthly compensation records'],
   '/invoices': ['Invoices', 'GST invoicing & payment tracking'],
   '/calendar': ['Calendar', 'Shoots, deliveries & deadlines'],
+  '/estimations': ['Estimations', 'Event cost quotations'],
+  '/inventory': ['Equipment', 'Cameras, hard disks & stands'],
   '/access': ['Access Control', 'Role levels and permissions'],
   '/activity': ['Activity Log', 'Every action across the studio'],
   '/profile': ['My Profile', 'Your personal details'],
