@@ -9,10 +9,10 @@ RUN npm run build
 # ---------- Stage 2: build the Spring Boot API ----------
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
+ENV MAVEN_OPTS="-Xmx768m -XX:+UseSerialGC"
 COPY api/pom.xml .
-RUN mvn -q dependency:go-offline
 COPY api/src ./src
-RUN mvn -q package -DskipTests
+RUN mvn -B package -DskipTests
 
 # ---------- Stage 3: slim runtime (API + frontend in one image) ----------
 FROM eclipse-temurin:21-jre-jammy AS runtime
