@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Build output
+client/dist/
+api/target/
+*.class
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data — never commit the database (it contains salaries & personal data)
+data/
+data_dev_backup/
+backups/
+*.sql.gz
+*.sql.bak
+
+# Local preview artifacts
+preview/
+
+# Logs
+*.log
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Test artifacts
+/tmp/

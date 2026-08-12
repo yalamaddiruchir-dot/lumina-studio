@@ -1,0 +1,16 @@
+# Caddy reverse proxy — automatic HTTPS via Let's Encrypt.
+# The API container serves both the React frontend and /api, so Caddy just
+# proxies everything. DOMAIN comes from .env.
+
+{$DOMAIN} {
+	encode gzip zstd
+
+	reverse_proxy api:3001
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+	}
+}

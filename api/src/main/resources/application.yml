@@ -1,0 +1,46 @@
+# Lumina Studios API — Spring Boot configuration.
+# Every value can be overridden by environment variables (see .env.example).
+
+server:
+  port: ${PORT:3001}
+
+spring:
+  application:
+    name: lumina-api
+
+  datasource:
+    # Local dev default targets a MySQL/MariaDB on localhost.
+    # In Docker Compose this is overridden to jdbc:mysql://mysql:3306/lumina.
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/lumina?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=utf8}
+    username: ${DB_USER:lumina}
+    password: ${DB_PASSWORD:lumina_dev_pass}
+    hikari:
+      maximum-pool-size: 10
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  jackson:
+    # Serialize java.sql.Timestamp as ISO-8601 strings (matches the old API's
+    # "YYYY-MM-DD HH:MM:SS" values, which the frontend parses as dates).
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  # REQUIRED in production — generate with: openssl rand -hex 32
+  jwt-secret: ${JWT_SECRET:lumina-dev-only-secret-please-change-me-0123456789}
+  # Development default true (auto-seed demo data). NEVER true in production.
+  seed-demo: ${SEED_DEMO:true}
+  # Comma-separated allowed origins (production; empty = same-origin only)
+  cors-origins: ${CORS_ORIGINS:}
+  # true in production — enables rate limiting etc.
+  prod: ${PROD:false}
+  # Max login attempts per IP per 15 minutes (production)
+  login-rate-limit: ${LOGIN_RATE_LIMIT:20}
+
+logging:
+  level:
+    root: INFO
+    com.luminastudio: INFO

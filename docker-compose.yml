@@ -1,0 +1,93 @@
+# Lumina Studios — production stack (Spring Boot + MySQL)
+#
+# The API image now bundles the built React frontend, so this stack is just:
+#   MySQL (persistent) + one API container (serves the UI + /api).
+# Caddy is optional (--profile proxy) for HTTPS with a domain.
+#
+# Quick start:
+#   cp .env.example .env        # edit: JWT_SECRET, MYSQL_*, ADMIN_*, DOMAIN
+#   docker compose --profile proxy up -d --build
+#
+# First boot with an empty DB + ADMIN_EMAIL/ADMIN_PASSWORD → creates the Owner account.
+# Backups: docker compose exec mysql sh -c 'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" lumina' > backups/lumina-$(date +%F).sql
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: lumina-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-lumina}
+      MYSQL_USER: ${MYSQL_USER:-lumina}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u$${MYSQL_USER}", "-p$${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    image: lumina-studio:latest
+    container_name: lumina-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (openssl rand -hex 32)}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      PROD: "true"
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-lumina}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USER: ${MYSQL_USER:-lumina}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      ADMIN_ROLE: ${ADMIN_ROLE:-owner}
+    ports:
+      - "3001:3001"
+    mem_limit: 768m
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/3001'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # Optional reverse proxy with automatic HTTPS (Let's Encrypt).
+  # Enable with: docker compose --profile proxy up -d
+  caddy:
+    profiles: ["proxy"]
+    image: caddy:2-alpine
+    container_name: lumina-caddy
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in .env to enable HTTPS (e.g. app.company.com)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 128m
+
+volumes:
+  mysql-data:
+  caddy-data:
+  caddy-config:

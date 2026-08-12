@@ -1,0 +1,43 @@
+# Render Blueprint — deploys the API (which also serves the frontend).
+# Render has no managed MySQL, so create a free MySQL on Aiven
+# (https://aiven.io → MySQL, free tier) and paste its connection string.
+# Or keep using Docker on a VPS (docker-compose.yml) if you'd rather not.
+#
+# Steps:
+#   1. Push this repo to GitHub.
+#   2. In Render → "New" → "Blueprint" → pick the repo.
+#   3. Set the env vars below (values come from .env / Aiven).
+#   4. First boot with ADMIN_EMAIL/ADMIN_PASSWORD creates the Owner account.
+
+services:
+  - type: web
+    name: lumina-studio
+    runtime: docker
+    repo: https://github.com/YOUR_USERNAME/lumina-studio
+    plan: free
+    dockerfilePath: api/Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - key: PROD
+        value: "true"
+      - key: SEED_DEMO
+        value: "false"
+      - key: JWT_SECRET
+        sync: false            # set it manually in the dashboard
+      - key: DB_URL
+        sync: false            # jdbc:mysql://HOST:3306/lumina?useSSL=true&requireSSL=true&serverTimezone=UTC
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

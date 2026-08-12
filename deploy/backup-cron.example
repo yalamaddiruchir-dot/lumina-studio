@@ -1,0 +1,8 @@
+# Nightly MySQL backup for the systemd (non-Docker) install.
+# Install: sudo crontab -e  (root)
+#
+# Uses mysqldump (transaction-consistent with --single-transaction for InnoDB).
+# Set MYSQL_ROOT_PASSWORD / MYSQL_USER / MYSQL_PASSWORD in /opt/lumina-studio/.env
+# to match your DB credentials.
+
+30 2 * * * root /bin/bash -c 'source /opt/lumina-studio/.env; mkdir -p /opt/lumina-studio/backups; mysqldump -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" --single-transaction --routines --triggers "$MYSQL_DATABASE" > /opt/lumina-studio/backups/lumina-$(date +%F).sql; find /opt/lumina-studio/backups -name "lumina-*.sql" -mtime +30 -delete' >> /opt/lumina-studio/backups/backup.log 2>&1

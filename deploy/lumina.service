@@ -1,0 +1,41 @@
+# systemd unit — run the Spring Boot API without Docker (bare-metal path).
+#
+# Prereqs: JDK 21 (or 17), a MySQL/MariaDB server with a `lumina` database,
+# and a built jar:  cd api && mvn package -DskipTests
+#
+# Install:
+#   1. Put the app at /opt/lumina-studio  (chown -R lumina:lumina /opt/lumina-studio)
+#   2. cp /opt/lumina-studio/.env.example /opt/lumina-studio/.env   (edit it!)
+#   3. sudo cp deploy/lumina.service /etc/systemd/system/lumina.service
+#   4. sudo systemctl daemon-reload
+#   5. sudo systemctl enable --now lumina
+#   6. First boot with an empty DB: set ADMIN_EMAIL/ADMIN_PASSWORD in .env
+#      (SystemdEnvironmentFile reads them) to create the initial Owner.
+#
+# Logs:   journalctl -u lumina -f
+# Proxy:  put Caddy or Nginx in front on 80/443 → 127.0.0.1:3001
+
+[Unit]
+Description=Lumina Studios API (Spring Boot)
+After=network-online.target mysql.service mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lumina
+Group=lumina
+WorkingDirectory=/opt/lumina-studio/api
+Environment=NODE_ENV=production
+Environment=PROD=true
+EnvironmentFile=/opt/lumina-studio/.env
+ExecStart=/usr/bin/java -jar /opt/lumina-studio/api/target/lumina-api.jar
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+# Hardening
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

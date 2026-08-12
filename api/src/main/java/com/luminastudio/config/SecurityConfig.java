@@ -1,0 +1,83 @@
+package com.luminastudio.config;
+
+import com.luminastudio.security.JwtAuthFilter;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+@EnableConfigurationProperties(AppProperties.class)
+public class SecurityConfig {
+
+    private final JwtAuthFilter jwtAuthFilter;
+    private final AppProperties props;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, AppProperties props) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.props = props;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/health").permitAll()
+                        // Built frontend (served by this process): static assets + SPA shell are public.
+                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico",
+                                "/logo.svg", "/*.png", "/*.webmanifest", "/*.txt").permitAll()
+                        .anyRequest().authenticated())
+                .exceptionHandling(eh -> eh.authenticationEntryPoint((req, res, ex) -> {
+                    res.setStatus(401);
+                    res.setContentType("application/json");
+                    res.setCharacterEncoding("UTF-8");
+                    res.getWriter().write("{\"error\":\"Authentication required\"}");
+                }))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration c = new CorsConfiguration();
+        if (props.prod()) {
+            List<String> origins = props.corsOrigins();
+            if (origins.isEmpty()) {
+                // Same-origin only — the built frontend is served by this process.
+                c.setAllowedOrigins(List.of());
+            } else {
+                c.setAllowedOrigins(origins);
+            }
+        } else {
+            // Development: Vite dev server (:5173) calls the API on :3001.
+            c.setAllowedOriginPatterns(List.of("*"));
+        }
+        c.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        c.setAllowedHeaders(List.of("*"));
+        c.setAllowCredentials(true);
+        c.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", c);
+        return source;
+    }
+}
