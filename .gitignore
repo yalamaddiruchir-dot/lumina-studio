@@ -33,3 +33,6 @@ preview/
 
 # Test artifacts
 /tmp/
+
+# Built frontend baked into the jar at Docker build time
+api/src/main/resources/static/

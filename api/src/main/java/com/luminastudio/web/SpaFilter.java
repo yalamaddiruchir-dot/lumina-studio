@@ -9,28 +9,18 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
- * Serves the built React frontend (client/dist) from the same process as the API.
- *
- * - /api/** and /assets/** → pass through to Spring/static handlers.
- * - Any other GET → the SPA shell (index.html) so client-side routes
- *   (/dashboard, /projects/2, …) work on refresh and deep links.
- * - If client/dist isn't present (e.g. dev mode with Vite), requests just 404
- *   normally — the dev frontend is served by Vite on :5173.
- *
- * Order is before Spring Security so public static content is reachable;
- * /api/** stays fully secured.
+ * SPA deep-link fallback. The React frontend is bundled in the jar
+ * (classpath:/static) — Spring serves index.html at "/" and /assets/**
+ * automatically with correct MIME types. This filter forwards non-API,
+ * non-file GET routes (e.g. /dashboard, /projects/2) to the SPA shell so
+ * client-side routing works on refresh and deep links.
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SpaFilter extends OncePerRequestFilter {
-
-    private static final Path DIST = Path.of("client", "dist");
-    private static final Path INDEX = DIST.resolve("index.html");
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -38,16 +28,11 @@ public class SpaFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         boolean get = "GET".equalsIgnoreCase(request.getMethod());
         boolean api = path.startsWith("/api");
-        boolean asset = path.startsWith("/assets/");
-        boolean dotFile = path.matches(".*\\.[a-z0-9]{1,6}$"); // .png .js .css .woff2 …
+        boolean hasDot = path.matches(".*\\.[a-zA-Z0-9]{1,6}$"); // files: .js .css .png .woff2 …
+        boolean root = "/".equals(path);
 
-        if (get && !api && !asset && !dotFile && INDEX.toFile().isFile()) {
-            response.setStatus(200);
-            response.setContentType("text/html");
-            response.setCharacterEncoding("UTF-8");
-            try (FileInputStream in = new FileInputStream(INDEX.toFile())) {
-                in.transferTo(response.getOutputStream());
-            }
+        if (get && !api && !hasDot && !root) {
+            request.getRequestDispatcher("/index.html").forward(request, response);
             return;
         }
         chain.doFilter(request, response);

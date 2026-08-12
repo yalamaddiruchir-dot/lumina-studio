@@ -12,6 +12,8 @@ WORKDIR /app
 ENV MAVEN_OPTS="-Xmx768m -XX:+UseSerialGC"
 COPY api/pom.xml .
 COPY api/src ./src
+# Bundle the built frontend into the jar (served from classpath: no fragile disk paths)
+COPY --from=client /app/client/dist ./src/main/resources/static
 RUN mvn -B package -DskipTests
 
 # ---------- Stage 3: slim runtime (API + frontend in one image) ----------
@@ -23,7 +25,6 @@ WORKDIR /app
 RUN groupadd -r lumina && useradd -r -g lumina -d /app lumina
 
 COPY --from=build /app/target/lumina-api.jar ./app.jar
-COPY --from=client /app/client/dist ./client/dist
 
 RUN chown -R lumina:lumina /app
 USER lumina
