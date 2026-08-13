@@ -16,7 +16,8 @@ async function request(path, options = {}) {
   const headers = { ...(rest.headers || {}) };
   if (body) headers['Content-Type'] = 'application/json';
   const token = getToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  // Never attach a (possibly stale) token to login — login must be anonymous.
+  if (token && !path.startsWith('/auth/login')) headers['Authorization'] = `Bearer ${token}`;
 
   const res = await fetch(`/api${path}`, { ...rest, headers, body: body ? JSON.stringify(body) : undefined });
 

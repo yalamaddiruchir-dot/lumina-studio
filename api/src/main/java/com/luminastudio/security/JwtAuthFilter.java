@@ -45,13 +45,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.parse(token);
             int id = Integer.parseInt(claims.getSubject());
-            Map<String, Object> user = jdbc.queryForMap(
+            java.util.List<Map<String, Object>> rows = jdbc.queryForList(
                     "SELECT id, name, email, role, department, position, status, is_demo FROM users WHERE id = :id",
                     Map.of("id", id));
-            if (user == null || user.isEmpty() || "inactive".equals(user.get("status"))) {
-                write401(response, "Account no longer exists");
+            if (rows.isEmpty() || "inactive".equals(rows.get(0).get("status"))) {
+                write401(response, "Account no longer exists — please sign in again");
                 return;
             }
+            Map<String, Object> user = rows.get(0);
             request.setAttribute(Auth.ATTR, user);
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                     id, null, List.of(new SimpleGrantedAuthority("ROLE_" + String.valueOf(user.get("role"))))));
