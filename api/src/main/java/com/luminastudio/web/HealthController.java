@@ -22,6 +22,7 @@ public class HealthController implements ErrorController {
         out.put("ok", true);
         out.put("app", "Lumina Studios");
         out.put("env", System.getProperty("app.env", "development"));
+        out.put("version", "v2.6.1");
         out.put("time", OffsetDateTime.now().toString());
         return out;
     }

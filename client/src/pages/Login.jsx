@@ -111,6 +111,7 @@ export default function Login() {
         <div className="login__card">
           <h2>Welcome back</h2>
           <p>Sign in to your studio workspace.</p>
+          <span className="muted" style={{ fontSize: 11 }}>Lumina Studios v2.6.1</span>
 
           {error && <div className="login__error">{error}</div>}
 
