@@ -38,6 +38,11 @@ const DEMO_ACCOUNTS = [
   { role: 'production', email: 'aryan@lumina.studio', label: 'Senior Album Designer', hue: 190 },
   // Production Team — Final Review
   { role: 'quality', email: 'zoya@lumina.studio', label: 'Quality Controller', hue: 320 },
+  // Camera Department
+  { role: 'production', email: 'ravi@lumina.studio', label: 'Photographer', hue: 200 },
+  { role: 'production', email: 'neha@lumina.studio', label: 'Videographer (Sr)', hue: 300 },
+  { role: 'production', email: 'karan@lumina.studio', label: 'Videographer (Jr)', hue: 145 },
+  { role: 'production', email: 'jai@lumina.studio', label: 'Drone Operator', hue: 175 },
 ];
 
 export default function Login() {
@@ -104,7 +109,7 @@ export default function Login() {
               <div><b>8</b><span>access levels</span></div>
               <div><b>5</b><span>departments</span></div>
               <div><b>7</b><span>pipeline stages</span></div>
-              <div><b>20</b><span>team members</span></div>
+              <div><b>24</b><span>team members</span></div>
             </div>
           </div>
         </div>

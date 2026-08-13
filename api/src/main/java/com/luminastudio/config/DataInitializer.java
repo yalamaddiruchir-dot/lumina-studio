@@ -111,6 +111,11 @@ public class DataInitializer implements CommandLineRunner {
             {"Aryan Kapoor", "aryan@lumina.studio", "production", "Production Team", "Senior Album Designer", "+91 97050 88321", "Hyderabad", "Premium album concepts, covers and print-ready files.", "Photoshop, InDesign, Prepress", 88000, "2022-08-01", 190},
             // Production Team — Final Review
             {"Zoya Khan", "zoya@lumina.studio", "quality", "Production Team", "Quality Controller", "+91 98900 22145", "Hyderabad", "The last pair of eyes — approves final review and releases delivery.", "QA, Colour Accuracy, Print Check", 70000, "2022-10-17", 320},
+            // Camera Department
+            {"Ravi Kumar", "ravi@lumina.studio", "production", "Camera Department", "Photographer", "+91 99000 11234", "Hyderabad", "Primary photographer — weddings, events and studio sessions.", "Photography, Lighting, Composition", 78000, "2021-05-10", 200},
+            {"Neha Desai", "neha@lumina.studio", "production", "Camera Department", "Videographer (Sr)", "+91 98200 66778", "Hyderabad", "Senior videographer — leads the video crew on every shoot.", "Videography, Cinematography, Editing", 88000, "2020-08-19", 300},
+            {"Karan Malhotra", "karan@lumina.studio", "production", "Camera Department", "Videographer (Jr)", "+91 97100 88990", "Hyderabad", "Junior videographer — gimbal, B-roll and second angle.", "Videography, Gimbal, B-roll", 55000, "2023-07-24", 145},
+            {"Jai Prakash", "jai@lumina.studio", "production", "Camera Department", "Drone Operator", "+91 98880 44567", "Hyderabad", "Certified drone pilot — aerial coverage and permits.", "Drone Flying, Aerial Cinematography, Permits", 72000, "2022-03-14", 175},
         };
         for (Object[] u : users) {
             jdbc.update("""
@@ -206,6 +211,12 @@ public class DataInitializer implements CommandLineRunner {
             {"Proposal deck — bridal portraits", "Package & moodboard for the session.", "Nisha's Bridal Portraits", "Aditya Rao", "done", "low", 1, 5, 1},
             {"Shoot-day plan — Godh Bharai", "Shot list and schedule.", "Agarwal Godh Bharai", "Sanjay Verma", "todo", "low", -12, 6, null},
             {"Client gallery setup", "Online gallery + contract links.", "Agarwal Godh Bharai", "Ishita Gupta", "done", "low", 3, 3, 2},
+            // Camera Department tasks
+            {"Lead camera — ceremony coverage", "Primary angle on all ceremonies.", "Gupta Wedding — Full Coverage", "Ravi Kumar", "in_progress", "high", -6, 20, null},
+            {"Second angle + gimbal B-roll", "Gimbal moves and B-roll cutaways.", "Gupta Wedding — Full Coverage", "Karan Malhotra", "in_progress", "medium", -8, 16, null},
+            {"Aerial coverage — venue & pre-wedding", "Drone flights with permits, venue overviews.", "Meera's Pre-Wedding Shoot", "Jai Prakash", "todo", "medium", -9, 10, null},
+            {"Lead videographer — highlight film", "Direct the video crew and key moments.", "Aarav & Nisha — Highlight Film", "Neha Desai", "in_progress", "high", -4, 22, null},
+            {"Drone flight — Goa beach venues", "Aerial beauty shots of the venues.", "Aarav & Nisha — Destination Wedding", "Jai Prakash", "done", "high", 28, 8, 25},
         };
         for (Object[] t : tasks) {
             int due = (Integer) t[6];
@@ -535,7 +546,7 @@ public class DataInitializer implements CommandLineRunner {
                     .addValue("details", a[3]).addValue("created", createdAt));
         }
 
-        log.info("Seeded: 20 employees, 7 clients, 13 projects, 28 tasks, 18 assets, 38 gallery photos, timesheets, attendance, payroll.");
+        log.info("Seeded: 24 employees, 7 clients, 13 projects, 33 tasks, 18 assets, 38 gallery photos, timesheets, attendance, payroll.");
         log.info("Demo login: owner@lumina.studio / demo123 (and other roles)");
     }
 }

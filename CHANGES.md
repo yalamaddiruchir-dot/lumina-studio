@@ -437,3 +437,25 @@ as the finished state — so delivered projects were counted as *active*, never 
 - **Dashboard (Spring + Node parity)**: `active_projects` now excludes delivered/cancelled,
   `projects_completed` counts delivered, and "Upcoming deadlines" no longer lists
   delivered projects as overdue.
+
+---
+
+# 📦 v2.6.3 — New "Camera Department" (Photographer, Videographer Sr/Jr, Drone Operator)
+
+**Date:** 13 Aug 2026
+**Requested:** another department in Employees — Camera Department with Photographer,
+Videographer (Sr/Jr) and Drone Operator.
+
+## What changed
+- **Department dropdown** (add/edit employee) now includes **Camera Department**.
+- **Seed data**: 4 new demo employees in the Camera Department (role: production):
+  Ravi Kumar (Photographer), Neha Desai (Videographer Sr), Karan Malhotra (Videographer Jr),
+  Jai Prakash (Drone Operator). Total demo team: **24**.
+- **Tasks**: 5 shoot tasks assigned to the camera crew (ceremony coverage, gimbal B-roll,
+  drone flights) so they appear on the board. Total tasks: 33.
+- **Login page**: 4 new demo-account chips (Photographer, Videographer Sr, Videographer Jr,
+  Drone Operator) — now 24 chips; team count updated.
+
+## Verified
+- 24 employees seeded; Camera Department shows the 4 positions; camera-crew tasks visible;
+  employees header "24 members"; demo chips include the new positions — zero errors.

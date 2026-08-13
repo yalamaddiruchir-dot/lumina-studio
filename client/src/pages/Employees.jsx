@@ -8,7 +8,7 @@ import { Avatar, Badge, EmptyState, Modal, ConfirmDialog, PageHeader, SearchBox,
 import { money, formatDate } from '../lib/format';
 
 const ROLES = ['owner', 'admin', 'manager', 'hr', 'finance', 'sales', 'quality', 'production'];
-const DEPARTMENTS = ['Management', 'Production Team', 'Sales & Client Management', 'Finance', 'Administration'];
+const DEPARTMENTS = ['Management', 'Camera Department', 'Production Team', 'Sales & Client Management', 'Finance', 'Administration'];
 
 const empty = { name: '', email: '', role: 'production', department: '', position: '', phone: '', location: 'Hyderabad', salary: '', hire_date: '', status: 'active', bio: '', skills: '' };
 
