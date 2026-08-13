@@ -416,3 +416,24 @@ employee availability + a printable PDF quotation; (4) Owner can manage equipmen
   PDF contains company/license/breakdown/GST/total.
 - Browser: 14 checks — no signup tab, admin lacks Add-employee & Equipment nav, manager has
   Add-employee, estimations list + modal with availability + live total, inventory page — zero errors.
+
+---
+
+# 📦 v2.6.2 — Fix: completed items no longer show "overdue"
+
+**Date:** 13 Aug 2026
+**Reported:** a project/task completed on its final date was still showing "overdue".
+
+## Root cause
+The code checked the old status `completed` everywhere, but the pipeline uses `delivered`
+as the finished state — so delivered projects were counted as *active*, never as
+*completed*, and the frontend showed overdue based only on the deadline date.
+
+## Fixed
+- **Project cards**: delivered/cancelled/completed projects show "✓ Delivered" / "Cancelled"
+  — never an overdue countdown, regardless of the deadline date.
+- **Task cards (kanban + detail)**: done tasks show a "Done" chip with a checkmark —
+  never overdue, even if the due date is in the past.
+- **Dashboard (Spring + Node parity)**: `active_projects` now excludes delivered/cancelled,
+  `projects_completed` counts delivered, and "Upcoming deadlines" no longer lists
+  delivered projects as overdue.

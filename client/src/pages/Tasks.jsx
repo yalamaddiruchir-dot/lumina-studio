@@ -150,6 +150,7 @@ export default function Tasks() {
 
 function TaskCard({ task, onClick, canMove, onMove, onDelete }) {
   const d = daysUntil(task.due_date);
+  const done = task.status === 'done';
   return (
     <div className="board-card" onClick={onClick}>
       <div className="board-card__title">{task.title}</div>
@@ -166,9 +167,9 @@ function TaskCard({ task, onClick, canMove, onMove, onDelete }) {
       <div className="board-card__foot">
         <div className="flex gap-6">
           {task.assignee_name ? <Avatar name={task.assignee_name} hue={task.assignee_hue} size="sm" /> : <span className="muted" style={{ fontSize: 11.5 }}>Unassigned</span>}
-          <span className={`due-chip ${d < 0 ? 'overdue' : d === 0 ? 'today' : ''}`}>
-            <Icon name="calendar" size={12} />
-            {task.due_date ? (d < 0 ? `${-d}d overdue` : d === 0 ? 'Today' : formatDateShort(task.due_date)) : '—'}
+          <span className={`due-chip ${!done && d < 0 ? 'overdue' : !done && d === 0 ? 'today' : ''}`}>
+            <Icon name={done ? 'checkCircle' : 'calendar'} size={12} />
+            {done ? 'Done' : task.due_date ? (d < 0 ? `${-d}d overdue` : d === 0 ? 'Today' : formatDateShort(task.due_date)) : '—'}
           </span>
         </div>
         {canMove && (

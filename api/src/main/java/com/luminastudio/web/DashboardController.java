@@ -49,7 +49,7 @@ public class DashboardController {
         Map<String, Object> p = (isStaff || !demo) ? Map.of("uid", uid) : Map.of();
 
         Map<String, Object> stats = new LinkedHashMap<>();
-        stats.put("active_projects", count("SELECT COUNT(*) FROM projects p WHERE p.status != 'completed' " + projScope, p));
+        stats.put("active_projects", count("SELECT COUNT(*) FROM projects p WHERE p.status NOT IN ('delivered','completed','cancelled') " + projScope, p));
         stats.put("open_tasks", count("SELECT COUNT(*) FROM tasks t WHERE t.status != 'done' " + taskScope, p));
         stats.put("my_due_tasks", count("SELECT COUNT(*) FROM tasks t WHERE t.status != 'done' AND t.assignee_id = :uid AND t.due_date <= :today",
                 Map.of("uid", uid, "today", today)));
@@ -63,7 +63,7 @@ public class DashboardController {
         stats.put("active_clients", demo
                 ? count("SELECT COUNT(*) FROM clients WHERE status = 'active'", Map.of())
                 : count("SELECT COUNT(*) FROM clients WHERE status = 'active' AND created_by = :uid", Map.of("uid", uid)));
-        stats.put("projects_completed", count("SELECT COUNT(*) FROM projects p WHERE p.status = 'completed' " + projScope, p));
+        stats.put("projects_completed", count("SELECT COUNT(*) FROM projects p WHERE p.status IN ('delivered','completed') " + projScope, p));
 
         List<Map<String, Object>> statusDist = jdbc.queryForList(
                 "SELECT status, COUNT(*) c FROM projects p WHERE 1=1 " + projScope + " GROUP BY status", p);
@@ -95,7 +95,7 @@ public class DashboardController {
         List<Map<String, Object>> upcoming = jdbc.queryForList("""
             SELECT p.id, p.name, p.deadline, p.priority, p.progress, c.name AS client_name
             FROM projects p LEFT JOIN clients c ON c.id = p.client_id
-            WHERE p.status != 'completed' AND p.deadline IS NOT NULL
+            WHERE p.status NOT IN ('delivered','completed','cancelled') AND p.deadline IS NOT NULL
             """ + projScope + " ORDER BY p.deadline ASC LIMIT 6", p);
 
         List<Map<String, Object>> activity = demo

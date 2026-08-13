@@ -117,6 +117,7 @@ export default function Projects() {
           <div className="project-grid mb-12">
             {pager.slice.map((p) => {
               const d = daysUntil(p.deadline);
+              const finished = ['delivered', 'completed', 'cancelled'].includes(p.status);
               const pct = Math.min(p.progress ?? stageProgress(p.status), 100);
               return (
                 <div key={p.id} className="project-card" onClick={() => navigate(`/projects/${p.id}`)}>
@@ -152,9 +153,15 @@ export default function Projects() {
                         </span>
                       )}
                       <Icon name="calendar" size={13} />
-                      <span className={d < 0 ? 'due-chip overdue' : d <= 3 ? 'due-chip today' : ''}>
-                        {d < 0 ? `${-d}d overdue` : d === 0 ? 'Due today' : d === null ? 'No date' : `${d}d left`}
-                      </span>
+                      {finished ? (
+                        <span style={{ color: p.status === 'delivered' ? 'var(--success)' : 'var(--text-3)', fontWeight: 700 }}>
+                          {p.status === 'delivered' ? '✓ Delivered' : 'Cancelled'}
+                        </span>
+                      ) : (
+                        <span className={d < 0 ? 'due-chip overdue' : d <= 3 ? 'due-chip today' : ''}>
+                          {d < 0 ? `${-d}d overdue` : d === 0 ? 'Due today' : d === null ? 'No date' : `${d}d left`}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

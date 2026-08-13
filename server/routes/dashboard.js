@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
   const staffProjParams = isStaff ? [me.id, me.id] : [];
 
   const stats = {};
-  stats.active_projects = db.prepare(`SELECT COUNT(*) c FROM projects p WHERE p.status != 'completed' ${staffScopeProj}`).get(...staffProjParams).c;
+  stats.active_projects = db.prepare(`SELECT COUNT(*) c FROM projects p WHERE p.status NOT IN ('delivered','completed','cancelled') ${staffScopeProj}`).get(...staffProjParams).c;
   stats.open_tasks = db.prepare(`SELECT COUNT(*) c FROM tasks t WHERE t.status != 'done' ${staffScopeTask}`).get(...staffParams).c;
   stats.my_due_tasks = db.prepare(`SELECT COUNT(*) c FROM tasks t WHERE t.status != 'done' AND t.assignee_id = ? AND t.due_date <= ?`).get(me.id, today).c;
   stats.pending_timesheets = hasPerm(me.role, 'timesheets.approve')
@@ -30,7 +30,7 @@ router.get('/', (req, res) => {
     : db.prepare(`SELECT COUNT(*) c FROM timesheets WHERE status = 'pending' AND user_id = ?`).get(me.id).c;
   stats.headcount = db.prepare(`SELECT COUNT(*) c FROM users WHERE status = 'active'`).get().c;
   stats.active_clients = db.prepare(`SELECT COUNT(*) c FROM clients WHERE status = 'active'`).get().c;
-  stats.projects_completed = db.prepare(`SELECT COUNT(*) c FROM projects p WHERE p.status = 'completed' ${staffScopeProj}`).get(...staffProjParams).c;
+  stats.projects_completed = db.prepare(`SELECT COUNT(*) c FROM projects p WHERE p.status IN ('delivered','completed') ${staffScopeProj}`).get(...staffProjParams).c;
 
   const status_dist = db.prepare(`SELECT status, COUNT(*) c FROM projects p WHERE 1=1 ${staffScopeProj} GROUP BY status`).all(...staffProjParams);
 
@@ -49,7 +49,7 @@ router.get('/', (req, res) => {
 
   const upcoming = db.prepare(`SELECT p.id, p.name, p.deadline, p.priority, p.progress, c.name AS client_name
     FROM projects p LEFT JOIN clients c ON c.id = p.client_id
-    WHERE p.status != 'completed' AND p.deadline IS NOT NULL ${staffScopeProj.replace(/p\./g, 'p.')}
+    WHERE p.status NOT IN ('delivered','completed','cancelled') AND p.deadline IS NOT NULL ${staffScopeProj.replace(/p\./g, 'p.')}
     ORDER BY p.deadline ASC LIMIT 6`).all(...staffProjParams);
 
   const activity = db.prepare(`SELECT a.id, a.action, a.details, a.created_at, u.name AS user_name, u.avatar_hue
