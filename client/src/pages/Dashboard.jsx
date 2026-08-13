@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
+import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { Icon } from '../components/icons';
 import { Avatar, Badge, Skeleton } from '../components/ui';
 import { BudgetBarChart, DonutChart, AreaChart } from '../components/Charts';
@@ -12,9 +15,24 @@ const STATUS_COLORS = {
 };
 
 export default function Dashboard() {
-  const { data, loading } = useApi('/dashboard');
+  const { data, loading, reload } = useApi('/dashboard');
   const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
+  const [seeding, setSeeding] = useState(false);
+
+  const loadSampleData = async () => {
+    setSeeding(true);
+    try {
+      const r = await api.post('/demo/seed');
+      toast(`Sample data loaded — ${r.projects} orders, ${r.clients} clients, ${r.tasks} tasks & more`);
+      reload();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const canApprove = ['owner', 'admin', 'manager', 'finance'].includes(user?.role);
 
@@ -43,6 +61,25 @@ export default function Dashboard() {
         </div>
         <Link to="/tasks" className="btn btn--primary"><Icon name="plus" size={16} /> New task</Link>
       </div>
+
+      {data && statsEmpty(data) && (
+        <div className="card mb-16" style={{ border: '1px dashed var(--primary)', background: 'linear-gradient(135deg, #eef0fe, #f5f0ff)' }}>
+          <div className="card__body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '18px 20px' }}>
+            <div style={{ width: 46, height: 46, borderRadius: 13, background: 'var(--primary)', color: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <Icon name="sparkles" size={22} />
+            </div>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ fontWeight: 800, fontSize: 15 }}>Your workspace is empty — want to explore?</div>
+              <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
+                Load sample data into <b>your account</b> — wedding orders across the pipeline, photo galleries, GST invoices, cost estimations, equipment inventory, timesheets & more. Everything is yours to edit or delete.
+              </div>
+            </div>
+            <button className="btn btn--primary" onClick={loadSampleData} disabled={seeding}>
+              <Icon name="sparkles" size={15} /> {seeding ? 'Loading…' : 'Load sample data'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="stat-grid mb-16">
         {statCards.map((s) => (
@@ -182,6 +219,11 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+function statsEmpty(d) {
+  const st = d?.stats || {};
+  return (st.active_projects || 0) === 0 && (st.active_clients || 0) === 0;
 }
 
 function DashboardSkeleton() {
