@@ -61,13 +61,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
         if (props.prod()) {
-            List<String> origins = props.corsOrigins();
-            if (origins.isEmpty()) {
-                // Same-origin only — the built frontend is served by this process.
-                c.setAllowedOrigins(List.of());
-            } else {
-                c.setAllowedOrigins(origins);
-            }
+            // The deployed app is served by this same process, so browsers call it
+            // same-origin. But Railway also routes via its proxy domain, and the
+            // Origin header may be present — accept the app's own origin(s) plus any
+            // explicitly configured CORS_ORIGINS (custom domain).
+            List<String> origins = new java.util.ArrayList<>(props.corsOrigins());
+            origins.add("http://localhost:3001");
+            origins.add("https://localhost:3001");
+            // Allow any Railway-style *.up.railway.app origin (auto-generated domain).
+            c.setAllowedOriginPatterns(java.util.List.of(
+                    "http://localhost:*", "https://localhost:*",
+                    "https://*.up.railway.app", "https://*.railway.app"));
+            c.setAllowedOrigins(origins);
         } else {
             // Development: Vite dev server (:5173) calls the API on :3001.
             c.setAllowedOriginPatterns(List.of("*"));
