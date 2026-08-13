@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
 import { Avatar } from '../components/ui';
 import { Icon } from '../components/icons';
@@ -43,6 +44,8 @@ export default function Login() {
   const { login } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: health } = useApi('/health');
+  const isDemo = health?.demo === true;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -132,6 +135,7 @@ export default function Login() {
             </button>
           </form>
 
+          {isDemo ? (
           <div className="demo-box">
             <span>Demo accounts — every position (password: demo123)</span>
             <div className="demo-accounts">
@@ -146,6 +150,15 @@ export default function Login() {
               All demo accounts share the password <span className="kbd">demo123</span>
             </p>
           </div>
+          ) : (
+          <div className="demo-box">
+            <span>Studio account</span>
+            <p className="hint" style={{ marginTop: 8, fontSize: 12, color: 'var(--text-3)' }}>
+              This workspace has no demo accounts. Sign in with the login your studio
+              (Owner / Manager / HR) created for you.
+            </p>
+          </div>
+          )}
         </div>
       </div>
     </div>
