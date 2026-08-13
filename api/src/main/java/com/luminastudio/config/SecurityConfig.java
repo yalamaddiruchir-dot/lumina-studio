@@ -38,14 +38,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // ★ Spring Security ONLY intercepts /api/** — the SPA, assets and deep
+                // links are served completely outside security (no 401/403 possible).
+                .securityMatcher("/api/**")
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/health").permitAll()
-                        // Built frontend (served by this process): static assets + SPA shell are public.
-                        .requestMatchers("/", "/index.html", "/assets/**", "/favicon.ico",
-                                "/logo.svg", "/*.png", "/*.webmanifest", "/*.txt").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(eh -> eh.authenticationEntryPoint((req, res, ex) -> {
                     res.setStatus(401);
